@@ -13,14 +13,14 @@ except ImportError:
     has_termios = False
 
 
-def interactive_shell(chan):
+def interactive_shell(chan, consumer):
     if has_termios:
-        posix_shell(chan)
+        posix_shell(chan, consumer)
     else:
-        windows_shell(chan)
+        windows_shell(chan, consumer)
 
 
-def posix_shell(chan):
+def posix_shell(chan, consumer):
     import select
     oldtty = termios.tcgetattr(sys.stdin)
     try:
@@ -47,16 +47,14 @@ def posix_shell(chan):
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
 
 
-def windows_shell(chan):
+def windows_shell(chan, consumer):
     import threading
     def writeall(sock):
         while True:
             data = sock.recv(1024)
             if not data:
-                sys.stdout.flush()
                 break
-            sys.stdout.write(data.decode('utf8'))
-            sys.stdout.flush()
+            consumer.send(data.decode('utf8'))
     writer = threading.Thread(target=writeall, args=(chan,))
     writer.start()
     try:

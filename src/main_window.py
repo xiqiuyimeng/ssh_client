@@ -12,6 +12,7 @@ from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
 
 from src.widget.menu_bar import fill_menu_bar
+from src.widget.scrollable_widget import MyTextEdit
 from src.widget.title_bar import TitleBar
 from src.widget.tool_bar import fill_tool_bar
 
@@ -49,6 +50,7 @@ class MainWindow(QMainWindow):
         self.listWidget.setFixedWidth(self.desktop_screen_rect.width() / 10)
         self.horizontalLayout.addWidget(self.listWidget)
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
+        self.tabWidget.setTabsClosable(True)
         self.tabWidget.setObjectName("tabWidget")
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
@@ -89,7 +91,24 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.statusbar)
 
         self.retranslateUi()
+        self.set_up_tab()
+
+        self.tabWidget.tabCloseRequested.connect(self.close_tab)
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("MainWindow", "Linux连接工具"))
+
+    def close_tab(self, tab_index):
+        self.tabWidget.removeTab(tab_index)
+
+    def set_up_tab(self):
+        tab = self.tab
+        verticalLayout_scroll = QtWidgets.QHBoxLayout(tab)
+        verticalLayout_scroll.setObjectName("verticalLayout_scroll")
+        tab.text_edit = MyTextEdit(tab)
+        tab.text_edit.setObjectName("text_edit")
+        # 以纯文本形式显示
+        tab.text_edit.setPlainText("test")
+        verticalLayout_scroll.addWidget(tab.text_edit)
+

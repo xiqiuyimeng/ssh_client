@@ -369,25 +369,13 @@ QPushButton:disabled{
     border-radius:20px;
     border-image:url(:/bg_jpg/result_dialog_bg.jpg);
 }
-QTextBrowser{
-    border-style: groove;
-    background: transparent;
-    font-size:18px;
-    font-family:楷体;
-}
-/*对于模板的文本展示区域，采用和pycharm、idea代码一致的Consolas字体*/
-#text_browser{
-    border-style: groove;
-    background: transparent;
-    font-size:16px;
-    font-family:Consolas;
-}
 /*对于模板的文本编辑区域，采用和pycharm、idea代码一致的Consolas字体*/
 QPlainTextEdit{
     border-style: groove;
-    background: transparent;
+    background: black;
     font-size:16px;
     font-family:Consolas;
+    color: white;
 }
 QProgressBar{
     font-size:18px;
