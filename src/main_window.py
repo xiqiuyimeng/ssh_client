@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
 
+from src.widget.async_ssh_connect import SSHConnectWorker
 from src.widget.menu_bar import fill_menu_bar
 from src.widget.scrollable_widget import MyTextEdit
 from src.widget.title_bar import TitleBar
@@ -100,15 +101,23 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(_translate("MainWindow", "Linux连接工具"))
 
     def close_tab(self, tab_index):
+        # self.tabWidget
+        # if hasattr(tab, "connect_thread"):
+        #     print("关闭")
         self.tabWidget.removeTab(tab_index)
 
     def set_up_tab(self):
         tab = self.tab
         verticalLayout_scroll = QtWidgets.QHBoxLayout(tab)
         verticalLayout_scroll.setObjectName("verticalLayout_scroll")
+        verticalLayout_scroll.setContentsMargins(0, 0, 0, 0)
         tab.text_edit = MyTextEdit(tab)
         tab.text_edit.setObjectName("text_edit")
-        # 以纯文本形式显示
-        tab.text_edit.setPlainText("test")
         verticalLayout_scroll.addWidget(tab.text_edit)
+        connect_thread = SSHConnectWorker()
+        # 输出界面，以纯文本形式显示
+        connect_thread.result.connect(lambda msg: tab.text_edit.append_plain_text(msg))
+        connect_thread.start()
+        setattr(tab, "connect_thread", connect_thread)
+
 

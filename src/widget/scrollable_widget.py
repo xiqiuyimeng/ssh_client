@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QTextCursor
 from PyQt5.QtWidgets import QAbstractScrollArea, QPlainTextEdit
 
 _author_ = 'luwt'
@@ -26,6 +26,15 @@ class MyTextEdit(QPlainTextEdit, MyScrollableWidget):
     
     def __init__(self, parent):
         super().__init__(parent)
+
+    def append_plain_text(self, text):
+        """
+        由于appendPlainText()方法默认会在末尾处添加新行，
+        导致有的连续段落会终断，
+        所以采用将光标移动到末尾然后插入新行方式
+        """
+        self.moveCursor(QTextCursor.End)
+        self.insertPlainText(text)
     #
     # def keyPressEvent(self, e):
     #     # 按下tab键，设置四个空格位
