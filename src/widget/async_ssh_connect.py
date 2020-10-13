@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 from PyQt5.QtCore import QThread, pyqtSignal
-
+from queue import Queue
 from src.ssh_func.ssh_inter import SSHConnect
 
 _author_ = 'luwt'
@@ -13,6 +13,8 @@ class SSHConnectWorker(QThread):
     result = pyqtSignal(str)
 
     def __init__(self):
+        # 创建队列用以方便线程间数据交换
+        self.queue = Queue()
         super().__init__()
 
     def run(self):
@@ -28,6 +30,9 @@ class SSHConnectWorker(QThread):
 
     def produce(self, consumer):
         consumer.__next__()
-        self.connect = SSHConnect('centos121', 22, 'root', 'admin', consumer)
+        self.connect = SSHConnect('centos121', 22, 'root', 'admin', consumer, self.queue)
         consumer.close()
+
+    def aaa(self, cmd):
+        self.queue.put(cmd)
 

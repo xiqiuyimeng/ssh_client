@@ -117,6 +117,7 @@ class MainWindow(QMainWindow):
         connect_thread = SSHConnectWorker()
         # 输出界面，以纯文本形式显示
         connect_thread.result.connect(lambda msg: tab.text_edit.append_plain_text(msg))
+        tab.text_edit.cmd_signal.connect(lambda cmd: connect_thread.aaa(cmd))
         connect_thread.start()
         setattr(tab, "connect_thread", connect_thread)
 

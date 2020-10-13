@@ -7,22 +7,27 @@ _date_ = '2020/10/9 11:49'
 
 class InteractiveShell:
 
-    def __init__(self, channel, consumer):
+    def __init__(self, channel, consumer, queue):
         self.channel = channel
         self.consumer = consumer
+        self.queue = queue
         self.receiver = ThreadPool(2)
         self.receiver.apply_async(self.recv_msg)
-        self.receiver.apply_async(self.send_cmd, args=("ll\n",))
+        self.receiver.apply_async(self.send_cmd)
         self.receiver.close()
         self.receiver.join()
+        print("thread finish")
 
     def recv_msg(self):
         while True:
-            data = self.channel.recv(128)
+            data = self.channel.recv(1024)
             if not data:
                 break
+            print(data.decode())
             self.consumer.send(data.decode())
 
-    def send_cmd(self, cmd):
-        self.channel.send(cmd)
+    def send_cmd(self):
+        while True:
+            cmd = self.queue.get()
+            self.channel.send(cmd)
 
