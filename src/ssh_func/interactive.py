@@ -16,14 +16,12 @@ class InteractiveShell:
         self.receiver.apply_async(self.send_cmd)
         self.receiver.close()
         self.receiver.join()
-        print("thread finish")
 
     def recv_msg(self):
         while True:
             data = self.channel.recv(1024)
             if not data:
                 break
-            print(data.decode())
             self.consumer.send(data.decode())
 
     def send_cmd(self):

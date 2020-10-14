@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QTextCursor
-from PyQt5.QtWidgets import QAbstractScrollArea, QPlainTextEdit
+from PyQt5.QtWidgets import QAbstractScrollArea, QPlainTextEdit, QListWidget
 
 _author_ = 'luwt'
 _date_ = '2020/10/10 10:25'
@@ -21,6 +21,9 @@ class MyScrollableWidget(QAbstractScrollArea):
         """设置滚动条在离开控件区域的时候隐藏"""
         self.verticalScrollBar().setHidden(True)
         self.horizontalScrollBar().setHidden(True)
+
+
+class MyListWidget(QListWidget, MyScrollableWidget): ...
 
 
 class MyTextEdit(QPlainTextEdit, MyScrollableWidget):

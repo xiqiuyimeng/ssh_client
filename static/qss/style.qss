@@ -122,6 +122,13 @@ QLineEdit:disabled{
     border-radius:25px;
     border-image:url(:/bg_jpg/conn_dialog_bg.jpg);
 }
+QListWidget{
+    border-style: solid;
+    border-right: 2px solid royalblue;
+    background: transparent;
+    font-size: 20px;
+    font-family: 楷体;
+}
 /*标签页字体*/
 QTabWidget{
     font-size:18px;
@@ -245,7 +252,7 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal{
     background: none;
 }
 /*标签页的label和下拉列表样式*/
-QTabWidget QLabel,QComboBox{
+QTabWidget QLabel{
     font-size:16px;
     font-family:楷体;
     qproperty-wordWrap:true
@@ -343,38 +350,12 @@ QPushButton:disabled{
 #menubar{
     font-size: 18px;
 }
-#main_title{
-    font-size:25px;
-    font-family:楷体;
-    font-weight:500;
-
-}
-/*特定label样式*/
-#lombok,#java,#java_src,#model,#mapper,#xml,#service,
-#service_impl,#controller,#output,#template_help_label,
-#template_engine_label,#template_desc,#template_name_label,#template_content_label{
-    font-size:18px;
-    font-family:楷体;
-    font-weight:500
-}
-/*标题label*/
-#mybatis_title,#spring_title{
-    font-size:25px;
-    font-family:楷体;
-    font-weight:500;
-    qproperty-alignment:AlignHCenter;
-}
-#result_frame{
-    border-style:solid;
-    border-radius:20px;
-    border-image:url(:/bg_jpg/result_dialog_bg.jpg);
-}
 /*对于模板的文本编辑区域，采用和pycharm、idea代码一致的Consolas字体*/
 QPlainTextEdit{
     border-style: groove;
     background: black;
-    font-size:16px;
-    font-family:Consolas;
+    font-size:13pt;
+    font-family:楷体;
     color: white;
 }
 QProgressBar{
@@ -388,27 +369,7 @@ QProgressBar::chunk {
     background: #16b816;
     border-radius: 10%;
 }
-#about_dialog QLabel, #help_dialog QLabel{
-    font-size:16px;
-    font-family:楷体;
-    qproperty-wordWrap:true;
-    qproperty-alignment:AlignTop;
-}
-#about_dialog #about_title, #help_dialog #help_title{
-    font-size:25px;
-    font-weight:900;
-    qproperty-alignment:AlignHCenter;
-}
-#about_dialog #generator_title, #about_dialog #path_title{
+#list_header{
     font-size:20px;
     font-weight:600;
 }
-#about_dialog #mybatis_generator_title,#about_dialog #spring_generator_title,
-#about_dialog #appoint_path, #about_dialog #appoint_project, #help_dialog #help_mysql_conn_title,
-#help_dialog #help_select_col_title, #help_dialog #help_path_generator_title,
-#help_dialog #help_project_generator_title{
-    font-size:19px;
-    font-weight:500;
-    qproperty-alignment:AlignTop;
-}
-

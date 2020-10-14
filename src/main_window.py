@@ -9,11 +9,16 @@
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
 
+from src.constant.constant import ADD_CONN_MENU, EDIT_CONN_MENU, CONN_LIST
+from src.dialog.conn_dialog import ConnDialog
+from src.func.list_func import add_list_item, show_all_item
+from src.sys_info_db.conn_sqlite import Connection
 from src.widget.async_ssh_connect import SSHConnectWorker
 from src.widget.menu_bar import fill_menu_bar
-from src.widget.scrollable_widget import MyTextEdit
+from src.widget.scrollable_widget import MyTextEdit, MyListWidget
 from src.widget.title_bar import TitleBar
 from src.widget.tool_bar import fill_tool_bar
 
@@ -24,6 +29,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         # 当前屏幕的分辨率大小
         self.desktop_screen_rect = screen_rect
+        # 保存下已有的连接
+        self.conn_dict = dict()
         self.setup_ui()
 
     def setup_ui(self):
@@ -46,19 +53,23 @@ class MainWindow(QMainWindow):
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
         self.horizontalLayout.setObjectName("horizontalLayout")
 
-        self.listWidget = QtWidgets.QListWidget(self.centralwidget)
+        self.label_list_splitter = QtWidgets.QSplitter(self.centralwidget)
+        self.label_list_splitter.setOrientation(QtCore.Qt.Vertical)
+        self.label_list_splitter.setObjectName("label_list_splitter")
+        self.label_list_splitter.setHandleWidth(0)
+        self.list_header = QtWidgets.QLabel(self.label_list_splitter)
+        self.list_header.setObjectName("list_header")
+        self.listWidget = MyListWidget(self.label_list_splitter)
         self.listWidget.setObjectName("listWidget")
         self.listWidget.setFixedWidth(self.desktop_screen_rect.width() / 10)
-        self.horizontalLayout.addWidget(self.listWidget)
+        self.horizontalLayout.addWidget(self.label_list_splitter)
+
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setTabsClosable(True)
         self.tabWidget.setObjectName("tabWidget")
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.tabWidget.addTab(self.tab, "Tab 1")
-        self.tab_2 = QtWidgets.QWidget()
-        self.tab_2.setObjectName("tab_2")
-        self.tabWidget.addTab(self.tab_2, "Tab 2")
         self.horizontalLayout.addWidget(self.tabWidget)
         self.setCentralWidget(self.centralwidget)
 
@@ -92,13 +103,21 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.statusbar)
 
         self.retranslateUi()
-        self.set_up_tab()
+        # self.set_up_tab()
+        self.set_up_list()
 
         self.tabWidget.tabCloseRequested.connect(self.close_tab)
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("MainWindow", "Linux连接工具"))
+        self.list_header.setText(CONN_LIST)
+
+    def set_up_list(self):
+        self.listWidget.setIconSize(QSize(40, 30))
+        self.list_icon = QIcon(":/icon/mysql_conn_icon.png")
+        self.listWidget.itemDoubleClicked.connect(lambda item: print(item.text()))
+        show_all_item(self)
 
     def close_tab(self, tab_index):
         # self.tabWidget
@@ -117,8 +136,14 @@ class MainWindow(QMainWindow):
         connect_thread = SSHConnectWorker()
         # 输出界面，以纯文本形式显示
         connect_thread.result.connect(lambda msg: tab.text_edit.append_plain_text(msg))
-        tab.text_edit.cmd_signal.connect(lambda cmd: connect_thread.aaa(cmd))
+        tab.text_edit.cmd_signal.connect(lambda cmd: connect_thread.send_cmd(cmd))
         connect_thread.start()
         setattr(tab, "connect_thread", connect_thread)
+
+    def add_connection(self):
+        conn_info = Connection(*((None,) * len(Connection._fields)))
+        self.add_dialog = ConnDialog(conn_info, ADD_CONN_MENU, self, self.screen_rect)
+        self.add_dialog.conn_signal.connect(add_list_item)
+        self.add_dialog.exec()
 
 

@@ -20,7 +20,7 @@ def add_insert_conn_tool(gui):
     # 指定图标
     insert_tool = QAction(QIcon(':/icon/add.png'), '添加服务器信息', gui)
     insert_tool.setStatusTip('在左侧列表中添加一条服务器信息')
-    # insert_tool.triggered.connect(lambda: add_conn_func(gui, gui.screen_rect))
+    insert_tool.triggered.connect(lambda: gui.add_connection())
     gui.toolBar.addAction(insert_tool)
 
 

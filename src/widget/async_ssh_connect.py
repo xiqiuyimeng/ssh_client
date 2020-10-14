@@ -33,6 +33,6 @@ class SSHConnectWorker(QThread):
         self.connect = SSHConnect('centos121', 22, 'root', 'admin', consumer, self.queue)
         consumer.close()
 
-    def aaa(self, cmd):
+    def send_cmd(self, cmd):
         self.queue.put(cmd)
 

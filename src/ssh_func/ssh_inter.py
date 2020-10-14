@@ -26,5 +26,4 @@ class SSHConnect:
         self.shell = interactive.InteractiveShell(self.channel, self.consumer, self.queue)
         self.channel.close()
         self.ssh_client.close()
-        print("connect close")
 
