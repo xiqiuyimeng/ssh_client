@@ -48,13 +48,13 @@ QToolTip{
     /*文字居中*/
     qproperty-alignment:AlignHCenter;
 }
-/*模板标题，模板帮助标题*/
-#template_title, #template_help_title{
+/*重命名标题*/
+#rename_title{
     font-size:20px;
     font-family:楷体;
     font-weight:500;
     /*文字居中*/
-    qproperty-alignment:AlignHCenter;
+    qproperty-alignment:AlignCenter;
 }
 /*标签字体样式*/
 QLabel{
@@ -86,8 +86,8 @@ QLineEdit:disabled{
     border-radius:25px;
     border-image:url(:/bg_jpg/conn_dialog_bg.jpg);
 }
-/*生成对话框样式*/
-#generate_frame{
+/*重命名对话框样式*/
+#rename_frame{
     border-style:solid;
     border-radius:25px;
     border-image:url(:/bg_jpg/conn_dialog_bg.jpg);
@@ -370,6 +370,10 @@ QProgressBar::chunk {
     border-radius: 10%;
 }
 #list_header{
+    font-size:20px;
+    font-weight:600;
+}
+#rename_title{
     font-size:20px;
     font-weight:600;
 }

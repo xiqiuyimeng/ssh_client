@@ -83,3 +83,10 @@ class ConnSqlite(SqliteBasic):
         data = self.cursor.fetchone()
         return data[0] == 0
 
+    def rename_conn(self, conn_id, conn_name):
+        """重命名"""
+        sql = conn_sql.get('update_selective') + 'name = ? where id = ?'
+        self.cursor.execute(sql, (conn_name, conn_id))
+        self.conn.commit()
+
+

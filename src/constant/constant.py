@@ -19,3 +19,9 @@ CONN_NAME_EXISTS = '连接名称{}不可用！'
 SAVE_CONN_SUCCESS_PROMPT = '保存成功！三秒后退出'
 ADD_CONN_MENU = '添加连接'
 EDIT_CONN_MENU = '编辑连接'
+
+# 连接列表右键菜单
+CONNECT = '连接'
+EDIT = '编辑'
+RENAME = '重命名'
+DELETE = '删除'

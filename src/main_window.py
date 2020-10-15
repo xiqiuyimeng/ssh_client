@@ -12,9 +12,10 @@ from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
 
-from src.constant.constant import ADD_CONN_MENU, EDIT_CONN_MENU, CONN_LIST
+from src.constant.constant import ADD_CONN_MENU, CONN_LIST, EDIT_CONN_MENU
 from src.dialog.conn_dialog import ConnDialog
-from src.func.list_func import add_list_item, show_all_item
+from src.dialog.rename_dialog import RenameDialog
+from src.func.list_func import add_list_item, show_all_item, right_click_menu, update_list_item
 from src.sys_info_db.conn_sqlite import Connection
 from src.widget.async_ssh_connect import SSHConnectWorker
 from src.widget.menu_bar import fill_menu_bar
@@ -29,7 +30,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         # 当前屏幕的分辨率大小
         self.desktop_screen_rect = screen_rect
-        # 保存下已有的连接
+        # 保存下已有的连接, conn_name: connection
         self.conn_dict = dict()
         self.setup_ui()
 
@@ -117,6 +118,10 @@ class MainWindow(QMainWindow):
         self.listWidget.setIconSize(QSize(40, 30))
         self.list_icon = QIcon(":/icon/mysql_conn_icon.png")
         self.listWidget.itemDoubleClicked.connect(lambda item: print(item.text()))
+        # 右击事件
+        self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.listWidget.customContextMenuRequested.connect(lambda pos: right_click_menu(self, pos))
+        # 展示列表
         show_all_item(self)
 
     def close_tab(self, tab_index):
@@ -142,8 +147,20 @@ class MainWindow(QMainWindow):
 
     def add_connection(self):
         conn_info = Connection(*((None,) * len(Connection._fields)))
-        self.add_dialog = ConnDialog(conn_info, ADD_CONN_MENU, self, self.screen_rect)
-        self.add_dialog.conn_signal.connect(add_list_item)
+        self.add_dialog = ConnDialog(conn_info, ADD_CONN_MENU, self.screen_rect)
+        self.add_dialog.conn_signal.connect(lambda conn: add_list_item(self, conn))
         self.add_dialog.exec()
+
+    def edit_connection(self, row):
+        connection = self.conn_dict.get(self.listWidget.item(row).text())
+        self.edit_dialog = ConnDialog(connection, EDIT_CONN_MENU, self.screen_rect)
+        self.edit_dialog.conn_signal.connect(lambda conn: update_list_item(self, row, conn.name))
+        self.edit_dialog.exec()
+
+    def rename_connection(self, row):
+        connection = self.conn_dict.get(self.listWidget.item(row).text())
+        self.rename_dialog = RenameDialog(self.screen_rect, connection)
+        self.rename_dialog.rename_result.connect(lambda conn_name: update_list_item(self, row, conn_name))
+        self.rename_dialog.exec()
 
 

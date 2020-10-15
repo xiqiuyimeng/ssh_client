@@ -11,25 +11,21 @@
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
-
-from src.widget.message_box import TimerMessageBox
 
 from src.constant.constant import CONN_NAME, HOST, PORT, USER_NAME, PASSWORD, BUTTON_OK, BUTTON_CANCEL, \
-    CONN_NAME_AVAILABLE, CONN_NAME_EXISTS, SAVE_CONN_SUCCESS_PROMPT, EDIT_CONN_MENU, ADD_CONN_MENU
+    SAVE_CONN_SUCCESS_PROMPT, EDIT_CONN_MENU, ADD_CONN_MENU
 from src.dialog.draggable_dialog import DraggableDialog
-from src.read_qrc.read_file import read_qss
+from src.func.conn_func import check_name_available
 from src.sys_info_db.conn_sqlite import Connection, ConnSqlite
+from src.widget.message_box import TimerMessageBox
 
 
 class ConnDialog(DraggableDialog):
 
-    conn_signal = QtCore.pyqtSignal(object, Connection)
+    conn_signal = QtCore.pyqtSignal(Connection)
 
-    def __init__(self, connection, dialog_title, gui, screen_rect):
+    def __init__(self, connection, dialog_title, screen_rect):
         super().__init__()
-        # 只是为了维护一个主窗口对象，方便其他操作
-        self.gui_parent = gui
         self.dialog_title = dialog_title
         self.connection = connection
         self._translate = QtCore.QCoreApplication.translate
@@ -121,15 +117,15 @@ class ConnDialog(DraggableDialog):
         # 按钮
         self.gridLayout_2 = QtWidgets.QGridLayout()
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.button_blank = QtWidgets.QLabel(self.conn_frame)
-        self.button_blank.setObjectName("button_blank")
-        self.gridLayout_2.addWidget(self.button_blank, 0, 0, 1, 1)
+        self.ok = QtWidgets.QPushButton(self.conn_frame)
+        self.ok.setObjectName("ok")
+        self.gridLayout_2.addWidget(self.ok, 0, 0, 1, 1)
         self.button_blank2 = QtWidgets.QLabel(self.conn_frame)
         self.button_blank2.setObjectName("button_blank2")
         self.gridLayout_2.addWidget(self.button_blank2, 0, 1, 1, 1)
-        self.ok = QtWidgets.QPushButton(self.conn_frame)
-        self.ok.setObjectName("ok")
-        self.gridLayout_2.addWidget(self.ok, 0, 2, 1, 1)
+        self.button_blank = QtWidgets.QLabel(self.conn_frame)
+        self.button_blank.setObjectName("button_blank")
+        self.gridLayout_2.addWidget(self.button_blank, 0, 2, 1, 1)
         self.cancel = QtWidgets.QPushButton(self.conn_frame)
         self.cancel.setObjectName("cancel")
         self.gridLayout_2.addWidget(self.cancel, 0, 3, 1, 1)
@@ -143,8 +139,13 @@ class ConnDialog(DraggableDialog):
         self.setTabOrder(self.user_value, self.passwd_value)
         # 设置端口号只能输入数字
         self.port_value.setValidator(QtGui.QIntValidator())
+        # 设置最多可输入字符数
+        self.conn_name_value.setMaxLength(50)
+        self.host_value.setMaxLength(20)
+        self.user_value.setMaxLength(20)
+        self.passwd_value.setMaxLength(30)
 
-        self.conn_name_value.textEdited.connect(self.check_name_available)
+        self.conn_name_value.textEdited.connect(lambda conn_name: check_name_available(self, conn_name))
         self.conn_name_value.textEdited.connect(self.check_input)
         self.host_value.textEdited.connect(self.check_input)
         self.port_value.textEdited.connect(self.check_input)
@@ -186,34 +187,6 @@ class ConnDialog(DraggableDialog):
             self.port_value.setText(self._translate("Dialog", "22"))
             self.user_value.setText(self._translate("Dialog", "root"))
 
-    def check_name_available(self, conn_name):
-        """检查名称是否可用"""
-        label_height = self.conn_name.geometry().height()
-        self.name_check_pic.setFixedWidth(label_height)
-        if conn_name:
-            name_available = ConnSqlite().check_name_available(self.connection.id, conn_name)
-            if name_available:
-                prompt = CONN_NAME_AVAILABLE.format(conn_name)
-                style = "color:green"
-                # 重载样式表
-                self.conn_name_value.setStyleSheet(read_qss())
-                pm = QPixmap(":/icon/right.png").scaled(label_height * 0.6,
-                                                        label_height * 0.6,
-                                                        Qt.IgnoreAspectRatio,
-                                                        Qt.SmoothTransformation)
-            else:
-                prompt = CONN_NAME_EXISTS.format(conn_name)
-                style = "color:red"
-                self.conn_name_value.setStyleSheet("#conn_name_value{border-color:red;color:red}")
-                pm = QPixmap(":/icon/wrong.png").scaled(label_height * 0.6,
-                                                        label_height * 0.6,
-                                                        Qt.IgnoreAspectRatio,
-                                                        Qt.SmoothTransformation)
-            self.name_available = name_available
-            self.name_check_pic.setPixmap(pm)
-            self.name_check_prompt.setStyleSheet(style)
-            self.name_check_prompt.setText(prompt)
-
     def check_input(self):
         # 检查是否都有值
         conn = self.get_input()
@@ -253,4 +226,4 @@ class ConnDialog(DraggableDialog):
             message_box = TimerMessageBox(self.dialog_title, SAVE_CONN_SUCCESS_PROMPT)
             message_box.exec_()
         self.close()
-        self.conn_signal.emit(self.gui_parent, new_conn)
+        self.conn_signal.emit(new_conn)
