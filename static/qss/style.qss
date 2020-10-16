@@ -124,7 +124,6 @@ QLineEdit:disabled{
 }
 QListWidget{
     border-style: solid;
-    border-right: 2px solid royalblue;
     background: transparent;
     font-size: 20px;
     font-family: 楷体;

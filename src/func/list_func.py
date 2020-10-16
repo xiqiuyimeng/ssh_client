@@ -29,10 +29,8 @@ def update_list_item(gui, row, conn_name):
     gui.conn_dict[conn_name] = Connection(**new_conn)
 
 
-def delete_list_item(gui, row):
+def delete_list_item(gui, row, conn_name):
     """删除项"""
-    item = gui.listWidget.item(row)
-    conn_name = item.text()
     conn_id = gui.conn_dict.get(conn_name).id
     ConnSqlite().delete(conn_id)
     del gui.conn_dict[conn_name]
@@ -50,25 +48,26 @@ def right_click_menu(gui, pos):
     if item:
         # 获取选中行号
         row = gui.listWidget.indexAt(pos).row()
+        conn_name = item.text()
         # 生成右键菜单
         menu = QMenu()
         menu_names = [CONNECT, EDIT, RENAME, DELETE]
         [menu.addAction(QAction(option, menu)) for option in menu_names]
         # 右键菜单点击事件
-        menu.triggered.connect(lambda act: right_menu_func(gui, act, row))
+        menu.triggered.connect(lambda act: right_menu_func(gui, act, row, conn_name))
         # 右键菜单弹出位置跟随焦点位置
         menu.exec_(QCursor.pos())
 
 
-def right_menu_func(gui, act, row):
+def right_menu_func(gui, act, row, conn_name):
     """右键菜单功能实现"""
     action_name = act.text()
     if action_name == CONNECT:
-        pass
+        gui.connect(conn_name)
     elif action_name == EDIT:
-        gui.edit_connection(row)
+        gui.edit_connection(row, conn_name)
     elif action_name == RENAME:
-        gui.rename_connection(row)
+        gui.rename_connection(row, conn_name)
     elif action_name == DELETE:
-        delete_list_item(gui, row)
+        delete_list_item(gui, row, conn_name)
 

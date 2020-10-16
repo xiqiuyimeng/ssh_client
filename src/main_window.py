@@ -12,7 +12,7 @@ from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
 
-from src.constant.constant import ADD_CONN_MENU, CONN_LIST, EDIT_CONN_MENU
+from src.constant.constant import ADD_CONN_MENU, CONN_LIST, EDIT_CONN_MENU, CONN_INFO
 from src.dialog.conn_dialog import ConnDialog
 from src.dialog.rename_dialog import RenameDialog
 from src.func.list_func import add_list_item, show_all_item, right_click_menu, update_list_item
@@ -54,24 +54,29 @@ class MainWindow(QMainWindow):
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
         self.horizontalLayout.setObjectName("horizontalLayout")
 
-        self.label_list_splitter = QtWidgets.QSplitter(self.centralwidget)
-        self.label_list_splitter.setOrientation(QtCore.Qt.Vertical)
-        self.label_list_splitter.setObjectName("label_list_splitter")
-        self.label_list_splitter.setHandleWidth(0)
-        self.list_header = QtWidgets.QLabel(self.label_list_splitter)
-        self.list_header.setObjectName("list_header")
-        self.listWidget = MyListWidget(self.label_list_splitter)
-        self.listWidget.setObjectName("listWidget")
-        self.listWidget.setFixedWidth(self.desktop_screen_rect.width() / 10)
-        self.horizontalLayout.addWidget(self.label_list_splitter)
+        self.horizontal_splitter = QtWidgets.QSplitter(self.centralwidget)
+        self.horizontal_splitter.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontal_splitter.setObjectName("horizontal_splitter")
 
-        self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
+        self.left_widget = QtWidgets.QWidget(self.horizontal_splitter)
+        self.left_widget.setObjectName("left_widget")
+        self.verticalLayout_left = QtWidgets.QVBoxLayout(self.left_widget)
+        self.list_header = QtWidgets.QLabel(self.left_widget)
+        self.list_header.setObjectName("list_header")
+        self.verticalLayout_left.addWidget(self.list_header)
+        self.listWidget = MyListWidget(self.left_widget)
+        self.listWidget.setObjectName("listWidget")
+        self.set_up_list()
+        self.verticalLayout_left.addWidget(self.listWidget)
+
+        self.tabWidget = QtWidgets.QTabWidget(self.horizontal_splitter)
         self.tabWidget.setTabsClosable(True)
         self.tabWidget.setObjectName("tabWidget")
-        self.tab = QtWidgets.QWidget()
-        self.tab.setObjectName("tab")
-        self.tabWidget.addTab(self.tab, "Tab 1")
-        self.horizontalLayout.addWidget(self.tabWidget)
+        # 默认隐藏
+        self.tabWidget.hide()
+        # 设置分割器左右比例
+        self.horizontal_splitter.setSizes([2, 3])
+        self.horizontalLayout.addWidget(self.horizontal_splitter)
         self.setCentralWidget(self.centralwidget)
 
         self.menubar = QtWidgets.QMenuBar(self)
@@ -104,8 +109,6 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.statusbar)
 
         self.retranslateUi()
-        # self.set_up_tab()
-        self.set_up_list()
 
         self.tabWidget.tabCloseRequested.connect(self.close_tab)
 
@@ -117,28 +120,41 @@ class MainWindow(QMainWindow):
     def set_up_list(self):
         self.listWidget.setIconSize(QSize(40, 30))
         self.list_icon = QIcon(":/icon/mysql_conn_icon.png")
-        self.listWidget.itemDoubleClicked.connect(lambda item: print(item.text()))
+        self.listWidget.itemDoubleClicked.connect(lambda item: self.connect(item.text()))
         # 右击事件
         self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.listWidget.customContextMenuRequested.connect(lambda pos: right_click_menu(self, pos))
+        # 选中
+        self.listWidget.itemSelectionChanged.connect(self.set_up_conn_info)
         # 展示列表
         show_all_item(self)
 
-    def close_tab(self, tab_index):
-        # self.tabWidget
-        # if hasattr(tab, "connect_thread"):
-        #     print("关闭")
-        self.tabWidget.removeTab(tab_index)
+    def set_up_conn_info(self):
+        # 获取当前选中元素的连接名
+        conn_name = self.listWidget.currentItem().text()
+        connection = self.conn_dict.get(conn_name)
+        if not hasattr(self, "conn_info_label"):
+            self.conn_info_label = QtWidgets.QLabel(self.left_widget)
+        self.conn_info_label.setText(CONN_INFO.format(*connection[1:5]))
+        self.verticalLayout_left.addWidget(self.conn_info_label)
 
-    def set_up_tab(self):
-        tab = self.tab
+    def close_tab(self, tab_index):
+        self.tabWidget.removeTab(tab_index)
+        if not self.tabWidget.count():
+            self.tabWidget.hide()
+
+    def set_up_tab(self, connection):
+        # 恢复tab控件可见性
+        self.tabWidget.setVisible(True)
+        tab = QtWidgets.QWidget()
+        self.tabWidget.addTab(tab, connection.name)
         verticalLayout_scroll = QtWidgets.QHBoxLayout(tab)
         verticalLayout_scroll.setObjectName("verticalLayout_scroll")
         verticalLayout_scroll.setContentsMargins(0, 0, 0, 0)
         tab.text_edit = MyTextEdit(tab)
         tab.text_edit.setObjectName("text_edit")
         verticalLayout_scroll.addWidget(tab.text_edit)
-        connect_thread = SSHConnectWorker()
+        connect_thread = SSHConnectWorker(*connection[2:])
         # 输出界面，以纯文本形式显示
         connect_thread.result.connect(lambda msg: tab.text_edit.append_plain_text(msg))
         tab.text_edit.cmd_signal.connect(lambda cmd: connect_thread.send_cmd(cmd))
@@ -151,16 +167,20 @@ class MainWindow(QMainWindow):
         self.add_dialog.conn_signal.connect(lambda conn: add_list_item(self, conn))
         self.add_dialog.exec()
 
-    def edit_connection(self, row):
-        connection = self.conn_dict.get(self.listWidget.item(row).text())
+    def edit_connection(self, row, conn_name):
+        connection = self.conn_dict.get(conn_name)
         self.edit_dialog = ConnDialog(connection, EDIT_CONN_MENU, self.screen_rect)
-        self.edit_dialog.conn_signal.connect(lambda conn: update_list_item(self, row, conn.name))
+        self.edit_dialog.conn_signal.connect(lambda conn: update_list_item(self, row, conn_name))
         self.edit_dialog.exec()
 
-    def rename_connection(self, row):
-        connection = self.conn_dict.get(self.listWidget.item(row).text())
+    def rename_connection(self, row, old_conn_name):
+        connection = self.conn_dict.get(old_conn_name)
         self.rename_dialog = RenameDialog(self.screen_rect, connection)
         self.rename_dialog.rename_result.connect(lambda conn_name: update_list_item(self, row, conn_name))
         self.rename_dialog.exec()
+
+    def connect(self, conn_name):
+        connection = self.conn_dict.get(conn_name)
+        self.set_up_tab(connection)
 
 

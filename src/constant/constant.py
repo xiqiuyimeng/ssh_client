@@ -25,3 +25,6 @@ CONNECT = '连接'
 EDIT = '编辑'
 RENAME = '重命名'
 DELETE = '删除'
+
+# 连接详细信息
+CONN_INFO = '连接信息\n名称：{}\n主机：{}\n端口：{}\n用户名：{}\n'

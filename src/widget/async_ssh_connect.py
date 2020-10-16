@@ -12,10 +12,14 @@ class SSHConnectWorker(QThread):
     error = pyqtSignal(Exception)
     result = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, host, port, user, pwd):
         # 创建队列用以方便线程间数据交换
         self.queue = Queue()
         super().__init__()
+        self.host = host
+        self.port = port
+        self.user = user
+        self.pwd = pwd
 
     def run(self):
         try:
@@ -30,7 +34,7 @@ class SSHConnectWorker(QThread):
 
     def produce(self, consumer):
         consumer.__next__()
-        self.connect = SSHConnect('centos121', 22, 'root', 'admin', consumer, self.queue)
+        self.connect = SSHConnect(self.host, self.port, self.user, self.pwd, consumer, self.queue)
         consumer.close()
 
     def send_cmd(self, cmd):

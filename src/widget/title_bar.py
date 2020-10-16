@@ -13,6 +13,7 @@ class TitleBar(QWidget):
     def __init__(self, title_height, parent, menu_bar):
         super().__init__()
         self.parent = parent
+        self.setFixedHeight(title_height * 2)
         # 沉浸式标题栏，和菜单栏在同一水平线
         self.menu_bar = menu_bar
         self.title_height = title_height
@@ -22,7 +23,6 @@ class TitleBar(QWidget):
         # 标题栏文字
         self.main_title = QLabel("Linux连接工具")
         self.main_title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.main_title.setFixedHeight(self.title_height)
         self.main_title.setObjectName("main_title")
         # 最小化按钮
         self.min_button = QPushButton()
