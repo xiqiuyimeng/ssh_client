@@ -48,6 +48,14 @@ QToolTip{
     /*文字居中*/
     qproperty-alignment:AlignHCenter;
 }
+/*主界面标题*/
+#main_title{
+    font-size:25px;
+    font-family:楷体;
+    font-weight:500;
+    /*文字居中*/
+    qproperty-alignment:AlignHCenter;
+}
 /*重命名标题*/
 #rename_title{
     font-size:20px;

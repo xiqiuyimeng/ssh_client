@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
 from src.constant.constant import ADD_CONN_MENU, CONN_LIST, EDIT_CONN_MENU, CONN_INFO
 from src.dialog.conn_dialog import ConnDialog
 from src.dialog.rename_dialog import RenameDialog
+from src.draggable_widget.draggable_ancestors_widget import DragWindowToolBar
 from src.func.list_func import add_list_item, show_all_item, right_click_menu, update_list_item
 from src.sys_info_db.conn_sqlite import Connection
 from src.widget.async_ssh_connect import SSHConnectWorker
@@ -89,7 +90,7 @@ class MainWindow(QMainWindow):
         self.title_bar.setFixedWidth(self.width())
 
         # 工具栏
-        self.toolBar = QtWidgets.QToolBar(self)
+        self.toolBar = DragWindowToolBar(self)
         self.toolBar.setObjectName("toolBar")
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
         fill_tool_bar(self)
