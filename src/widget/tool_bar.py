@@ -13,6 +13,8 @@ _date_ = '2020/10/9 17:01'
 def fill_tool_bar(gui):
     add_insert_conn_tool(gui)
     add_ftp_tool(gui)
+    add_close_list_tool(gui)
+    add_open_list_tool(gui)
     add_exit_tool(gui)
 
 
@@ -29,6 +31,20 @@ def add_ftp_tool(gui):
     generate_tool.setStatusTip('')
     # generate_tool.triggered.connect(gui.generate)
     gui.toolBar.addAction(generate_tool)
+
+
+def add_close_list_tool(gui):
+    close_tool = QAction(QIcon(':/icon/refresh.png'), '关闭连接列表', gui)
+    close_tool.setStatusTip('关闭左侧的连接列表')
+    close_tool.triggered.connect(gui.left_widget.hide)
+    gui.toolBar.addAction(close_tool)
+
+
+def add_open_list_tool(gui):
+    open_tool = QAction(QIcon(':/icon/refresh.png'), '打开连接列表', gui)
+    open_tool.setStatusTip('打开左侧的连接列表')
+    open_tool.triggered.connect(gui.left_widget.show)
+    gui.toolBar.addAction(open_tool)
 
 
 def add_exit_tool(gui):

@@ -146,7 +146,7 @@ class MainWindow(QMainWindow):
 
     def set_up_tab(self, connection):
         # 恢复tab控件可见性
-        self.tabWidget.setVisible(True)
+        self.tabWidget.show()
         tab = QtWidgets.QWidget()
         self.tabWidget.addTab(tab, connection.name)
         verticalLayout_scroll = QtWidgets.QHBoxLayout(tab)
