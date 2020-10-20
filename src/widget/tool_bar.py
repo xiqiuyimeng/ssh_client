@@ -15,6 +15,7 @@ def fill_tool_bar(gui):
     add_ftp_tool(gui)
     add_close_list_tool(gui)
     add_open_list_tool(gui)
+    add_open_table_tool(gui)
     add_exit_tool(gui)
 
 
@@ -44,6 +45,13 @@ def add_open_list_tool(gui):
     open_tool = QAction(QIcon(':/icon/refresh.png'), '打开连接列表', gui)
     open_tool.setStatusTip('打开左侧的连接列表')
     open_tool.triggered.connect(gui.left_widget.show)
+    gui.toolBar.addAction(open_tool)
+
+
+def add_open_table_tool(gui):
+    open_tool = QAction(QIcon(':/icon/refresh.png'), '打开连接表格', gui)
+    open_tool.setStatusTip('打开左侧的连接列表')
+    open_tool.triggered.connect(gui.open_table)
     gui.toolBar.addAction(open_tool)
 
 

@@ -14,9 +14,10 @@ from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
 
 from src.constant.constant import ADD_CONN_MENU, CONN_LIST, EDIT_CONN_MENU, CONN_INFO
 from src.dialog.conn_dialog import ConnDialog
+from src.dialog.conn_table import ConnTableDialog
 from src.dialog.rename_dialog import RenameDialog
 from src.draggable_widget.draggable_ancestors_widget import DragWindowToolBar
-from src.func.list_func import add_list_item, show_all_item, right_click_menu, update_list_item
+from src.func.list_func import add_list_item, show_all_item, right_click_menu, update_list_item, delete_list_item
 from src.sys_info_db.conn_sqlite import Connection
 from src.widget.async_ssh_connect import SSHConnectWorker
 from src.widget.menu_bar import fill_menu_bar
@@ -76,7 +77,8 @@ class MainWindow(QMainWindow):
         # 默认隐藏
         self.tabWidget.hide()
         # 设置分割器左右比例
-        self.horizontal_splitter.setSizes([2, 3])
+        self.horizontal_splitter.setStretchFactor(0, 1)
+        self.horizontal_splitter.setStretchFactor(1, 5)
         self.horizontalLayout.addWidget(self.horizontal_splitter)
         self.setCentralWidget(self.centralwidget)
 
@@ -183,5 +185,13 @@ class MainWindow(QMainWindow):
     def connect(self, conn_name):
         connection = self.conn_dict.get(conn_name)
         self.set_up_tab(connection)
+
+    def open_table(self):
+        self.table_dialog = ConnTableDialog(self.screen_rect)
+        self.table_dialog.connect_signal.connect(self.connect)
+        self.table_dialog.edit_signal.connect(self.edit_connection)
+        self.table_dialog.del_signal.connect(lambda row, conn_name: delete_list_item(self, row, conn_name))
+        self.table_dialog.exec()
+
 
 

@@ -28,3 +28,9 @@ DELETE = '删除'
 
 # 连接详细信息
 CONN_INFO = '连接信息\n名称：{}\n主机：{}\n端口：{}\n用户名：{}\n'
+
+# 连接表格对话框表头
+CONN_TABLE_HEADER_LABELS = ['全选', '连接名称', '主机', '端口号', '用户名', '操作']
+
+OPERATION_FAILED = '操作失败！'
+DEL_CONN = '删除连接'

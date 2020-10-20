@@ -28,6 +28,7 @@ conn_sql = {
     'select': 'select * from connection',
     'select_name_exist': 'select count(*) > 0 from connection where name = ?',
     'select_id_by_name': 'select id from connection where name = ?',
+    'batch_delete': 'delete from connection where name in ',
 }
 
 
@@ -87,6 +88,11 @@ class ConnSqlite(SqliteBasic):
         """重命名"""
         sql = conn_sql.get('update_selective') + 'name = ? where id = ?'
         self.cursor.execute(sql, (conn_name, conn_id))
+        self.conn.commit()
+
+    def batch_delete(self, conn_names):
+        sql = conn_sql.get('batch_delete') + f"({','.join('?' * len(conn_names))})"
+        self.cursor.execute(sql, conn_names)
         self.conn.commit()
 
 
