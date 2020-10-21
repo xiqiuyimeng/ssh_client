@@ -17,7 +17,8 @@ from src.dialog.conn_dialog import ConnDialog
 from src.dialog.conn_table import ConnTableDialog
 from src.dialog.rename_dialog import RenameDialog
 from src.draggable_widget.draggable_ancestors_widget import DragWindowToolBar
-from src.func.list_func import add_list_item, show_all_item, right_click_menu, update_list_item, delete_list_item
+from src.func.list_func import add_list_item, show_all_item, right_click_menu, rename_list_item, delete_list_item, \
+    update_list_item
 from src.sys_info_db.conn_sqlite import Connection
 from src.widget.async_ssh_connect import SSHConnectWorker
 from src.widget.menu_bar import fill_menu_bar
@@ -134,12 +135,16 @@ class MainWindow(QMainWindow):
 
     def set_up_conn_info(self):
         # 获取当前选中元素的连接名
-        conn_name = self.listWidget.currentItem().text()
-        connection = self.conn_dict.get(conn_name)
-        if not hasattr(self, "conn_info_label"):
-            self.conn_info_label = QtWidgets.QLabel(self.left_widget)
-        self.conn_info_label.setText(CONN_INFO.format(*connection[1:5]))
-        self.verticalLayout_left.addWidget(self.conn_info_label)
+        if self.listWidget.currentItem():
+            conn_name = self.listWidget.currentItem().text()
+            connection = self.conn_dict.get(conn_name)
+            if not hasattr(self, "conn_info_label"):
+                self.conn_info_label = QtWidgets.QLabel(self.left_widget)
+            self.conn_info_label.setText(CONN_INFO.format(*connection[1:5]))
+            self.verticalLayout_left.addWidget(self.conn_info_label)
+        else:
+            if hasattr(self, "conn_info_label"):
+                self.conn_info_label.hide()
 
     def close_tab(self, tab_index):
         self.tabWidget.removeTab(tab_index)
@@ -173,13 +178,13 @@ class MainWindow(QMainWindow):
     def edit_connection(self, row, conn_name):
         connection = self.conn_dict.get(conn_name)
         self.edit_dialog = ConnDialog(connection, EDIT_CONN_MENU, self.screen_rect)
-        self.edit_dialog.conn_signal.connect(lambda conn: update_list_item(self, row, conn_name))
+        self.edit_dialog.conn_signal.connect(lambda conn: update_list_item(self, row, conn))
         self.edit_dialog.exec()
 
     def rename_connection(self, row, old_conn_name):
         connection = self.conn_dict.get(old_conn_name)
         self.rename_dialog = RenameDialog(self.screen_rect, connection)
-        self.rename_dialog.rename_result.connect(lambda conn_name: update_list_item(self, row, conn_name))
+        self.rename_dialog.rename_result.connect(lambda conn_name: rename_list_item(self, row, conn_name))
         self.rename_dialog.exec()
 
     def connect(self, conn_name):
@@ -187,10 +192,11 @@ class MainWindow(QMainWindow):
         self.set_up_tab(connection)
 
     def open_table(self):
-        self.table_dialog = ConnTableDialog(self.screen_rect)
+        self.table_dialog = ConnTableDialog(self, self.screen_rect)
         self.table_dialog.connect_signal.connect(self.connect)
-        self.table_dialog.edit_signal.connect(self.edit_connection)
-        self.table_dialog.del_signal.connect(lambda row, conn_name: delete_list_item(self, row, conn_name))
+        self.table_dialog.edit_signal.connect(lambda row, conn: update_list_item(self, row, conn))
+        self.table_dialog.del_signal.connect(lambda selected_conns:
+                                             delete_list_item(self, selected_conns, del_data=False))
         self.table_dialog.exec()
 
 

@@ -9,14 +9,15 @@
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtWidgets import QToolButton, QHeaderView, QMenu, QAction
 
-from src.constant.constant import CONN_TABLE_HEADER_LABELS, CONNECT, EDIT, DELETE
+from src.constant.constant import CONN_TABLE_HEADER_LABELS, CONNECT, EDIT, DELETE, EDIT_CONN_MENU
+from src.dialog.conn_dialog import ConnDialog
 from src.dialog.draggable_dialog import DraggableDialog
 from src.func.operate_conn_thread import OperateConn
 from src.scrollable_widget.scrollable_widget import MyTableWidget
-from src.sys_info_db.conn_sqlite import ConnSqlite
+from src.sys_info_db.conn_sqlite import ConnSqlite, Connection
 from src.table.table_header import CheckBoxHeader
 from src.table.table_item import MyTableWidgetItem
 
@@ -24,11 +25,12 @@ from src.table.table_item import MyTableWidgetItem
 class ConnTableDialog(DraggableDialog):
 
     connect_signal = pyqtSignal(str)
-    edit_signal = pyqtSignal(int, str)
-    del_signal = pyqtSignal(int, str)
+    edit_signal = pyqtSignal(int, Connection)
+    del_signal = pyqtSignal(list)
 
-    def __init__(self, screen_rect):
+    def __init__(self, parent, screen_rect):
         super().__init__()
+        self.parent = parent
         self.main_screen_rect = screen_rect
         # 初始化需要使用的icon
         self.icon = QIcon(":/icon/exec.png")
@@ -72,8 +74,14 @@ class ConnTableDialog(DraggableDialog):
         self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         # 表格选中多行
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.tableWidget.doubleClicked.connect(lambda index: self.connect_ssh(self.tableWidget.item(index.row(), 1).text()))
         self.tableWidget.itemSelectionChanged.connect(self.multi_select_func)
+        # 双击
+        self.tableWidget.doubleClicked.connect(
+            lambda index: self.connect_ssh(self.tableWidget.item(index.row(), 1).text())
+        )
+        # 右击事件
+        self.tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tableWidget.customContextMenuRequested.connect(self.right_click_menu)
         self.verticalLayout.addWidget(self.tableWidget)
 
         self.gridLayout = QtWidgets.QGridLayout()
@@ -171,23 +179,65 @@ class ConnTableDialog(DraggableDialog):
         connect_act.triggered.connect(lambda: self.connect_ssh(conn_name))
         menu.addAction(connect_act)
         edit_act = QAction(self.icon, EDIT, self)
-        edit_act.triggered.connect(lambda: self.edit_emit(row, conn_name))
+        edit_act.triggered.connect(lambda: self.edit_conn(row, conn_name))
         menu.addAction(edit_act)
         del_act = QAction(self.icon, DELETE, self)
-        del_act.triggered.connect(lambda: self.del_emit(row, conn_name))
+        del_act.triggered.connect(lambda: self.del_conn(row, conn_name))
         menu.addAction(del_act)
         tool_button.setMenu(menu)
+
+    def right_click_menu(self, pos):
+        """
+        右键菜单功能，实现右键弹出菜单功能
+        :param pos:右键的坐标位置
+        """
+        # 获取当前元素，只有在元素上才显示菜单
+        item = self.tableWidget.itemAt(pos)
+        if item:
+            # 获取选中行号
+            row = self.tableWidget.indexAt(pos).row()
+            conn_name = item.text()
+            # 生成右键菜单
+            menu = QMenu()
+            menu_names = [CONNECT, EDIT, DELETE]
+            [menu.addAction(QAction(option, menu)) for option in menu_names]
+            # 右键菜单点击事件
+            menu.triggered.connect(lambda act: self.right_menu_func(act, row, conn_name))
+            # 右键菜单弹出位置跟随焦点位置
+            menu.exec_(QCursor.pos())
+
+    def right_menu_func(self, act, row, conn_name):
+        """右键菜单功能"""
+        act_text = act.text()
+        if act_text == CONNECT:
+            self.connect_ssh(conn_name)
+        elif act_text == EDIT:
+            self.edit_conn(row, conn_name)
+        elif act_text == DELETE:
+            self.del_conn(row, conn_name)
 
     def connect_ssh(self, conn_name):
         self.connect_signal.emit(conn_name)
         self.close()
 
-    def edit_emit(self, row, conn_name):
-        self.edit_signal.emit(row, conn_name)
+    def edit_conn(self, row, conn_name):
+        connection = self.parent.conn_dict.get(conn_name)
+        self.edit_dialog = ConnDialog(connection, EDIT_CONN_MENU, self.main_screen_rect)
+        self.edit_dialog.conn_signal.connect(lambda conn: self.update_table(row, conn))
+        self.edit_dialog.exec()
 
-    def del_emit(self, row, conn_name):
-        # OperateConn(self, self.selected_connections).handle_ui_delete(True, None)
-        self.del_signal.emit(row, conn_name)
+    def update_table(self, row, connection):
+        # 先发射信号
+        self.edit_signal.emit(row, connection)
+        # 刷新表格，第一列和最后一列不需要填充
+        conn = connection[1: 5]
+        for col in range(self.tableWidget.columnCount() - 2):
+            self.tableWidget.item(row, col + 1).setText(conn[col])
+        # 菜单
+        self.rebuild_pop_menu((row, ))
+
+    def del_conn(self, row, conn_name):
+        OperateConn(self, [(row, conn_name), ], self.del_signal)
 
     def all_clicked(self, clicked):
         self.selected_connections.clear()
@@ -222,8 +272,8 @@ class ConnTableDialog(DraggableDialog):
                 self.tableWidget.item(row, 0).setCheckState(Qt.Unchecked)
                 self.on_checkbox_changed(Qt.Unchecked, self.tableWidget.item(row, 1).text(), row)
 
-    def batch_delete(self, selected_connections=None):
-        OperateConn(self, selected_connections if selected_connections else self.selected_connections)
+    def batch_delete(self):
+        OperateConn(self, self.selected_connections, self.del_signal)
 
     def rebuild_pop_menu(self, rows):
         [self.tableWidget.setCellWidget(row, 5, self.make_tools(row)) for row in rows]

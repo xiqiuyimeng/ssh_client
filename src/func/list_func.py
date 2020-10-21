@@ -20,21 +20,43 @@ def add_list_item(gui, connection):
     gui.conn_dict[connection.name] = connection
 
 
-def update_list_item(gui, row, conn_name):
+def rename_list_item(gui, row, conn_name):
     """重命名"""
     old_name = gui.listWidget.item(row).text()
     gui.listWidget.item(row).setText(conn_name)
     new_conn = gui.conn_dict[old_name]._asdict()
     new_conn['name'] = conn_name
     gui.conn_dict[conn_name] = Connection(**new_conn)
+    del gui.conn_dict[old_name]
+    update_info_label(gui)
 
 
-def delete_list_item(gui, row, conn_name):
+def update_list_item(gui, row, connection):
+    """更新"""
+    old_name = gui.listWidget.item(row).text()
+    if old_name != connection.name:
+        gui.listWidget.item(row).setText(connection.name)
+        gui.conn_dict[connection.name] = connection
+        del gui.conn_dict[old_name]
+    else:
+        gui.conn_dict[old_name] = connection
+    update_info_label(gui)
+
+
+def update_info_label(gui):
+    if hasattr(gui, 'conn_info_label'):
+        gui.set_up_conn_info()
+
+
+def delete_list_item(gui, selected_conns, del_data=True):
     """删除项"""
-    conn_id = gui.conn_dict.get(conn_name).id
-    ConnSqlite().delete(conn_id)
-    del gui.conn_dict[conn_name]
-    gui.listWidget.takeItem(row)
+    # 按行号逆序排序，由大到小，因为删除，需要从后向前删
+    for row_conn_name in sorted(selected_conns, key=lambda x: x[0], reverse=True):
+        if del_data:
+            conn_id = gui.conn_dict.get(row_conn_name[1]).id
+            ConnSqlite().delete(conn_id)
+        del gui.conn_dict[row_conn_name[1]]
+        gui.listWidget.takeItem(row_conn_name[0])
 
 
 def right_click_menu(gui, pos):
@@ -69,5 +91,5 @@ def right_menu_func(gui, act, row, conn_name):
     elif action_name == RENAME:
         gui.rename_connection(row, conn_name)
     elif action_name == DELETE:
-        delete_list_item(gui, row, conn_name)
+        delete_list_item(gui, ((row, conn_name), ))
 

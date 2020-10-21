@@ -31,12 +31,13 @@ class OperateConnWorker(QThread):
 
 class OperateConn:
 
-    def __init__(self, gui, selected_conns):
+    def __init__(self, gui, selected_conns, signal):
         # 调用者
         self.gui = gui
         self.loading_mask = LoadingMask(self.gui, ":/gif/loading.gif")
         self.loading_mask.show()
         self.selected_conns = selected_conns
+        self.signal = signal
         self.operate_conn()
 
     def operate_conn(self):
@@ -47,6 +48,7 @@ class OperateConn:
     def handle_ui_delete(self, flag, result):
         if flag:
             self.loading_mask.close()
+            self.signal.emit(self.selected_conns)
             delete_rows = sorted(list(map(lambda x: x[0], self.selected_conns)), reverse=True)
             # 已经删除完毕，选中列表可以清除
             self.selected_conns.clear()
