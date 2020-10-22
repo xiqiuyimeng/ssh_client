@@ -12,7 +12,7 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtWidgets import QToolButton, QHeaderView, QMenu, QAction
 
-from src.constant.constant import CONN_TABLE_HEADER_LABELS, CONNECT, EDIT, DELETE, EDIT_CONN_MENU
+from src.constant.constant import CONN_TABLE_HEADER_LABELS, CONNECT, EDIT, DELETE, EDIT_CONN_MENU, ADD_CONN_MENU
 from src.dialog.conn_dialog import ConnDialog
 from src.dialog.draggable_dialog import DraggableDialog
 from src.func.operate_conn_thread import OperateConn
@@ -25,6 +25,7 @@ from src.table.table_item import MyTableWidgetItem
 class ConnTableDialog(DraggableDialog):
 
     connect_signal = pyqtSignal(str)
+    add_signal = pyqtSignal(Connection)
     edit_signal = pyqtSignal(int, Connection)
     del_signal = pyqtSignal(list)
 
@@ -89,23 +90,24 @@ class ConnTableDialog(DraggableDialog):
         self.add_button = QtWidgets.QPushButton(self.conn_table_frame)
         self.add_button.setObjectName("add_button")
         self.gridLayout.addWidget(self.add_button, 0, 0, 1, 1)
-        self.edit_button = QtWidgets.QPushButton(self.conn_table_frame)
-        self.edit_button.setObjectName("edit_button")
-        self.gridLayout.addWidget(self.edit_button, 0, 1, 1, 1)
+        self.del_button = QtWidgets.QPushButton(self.conn_table_frame)
+        self.del_button.setObjectName("del_button")
+        self.gridLayout.addWidget(self.del_button, 0, 1, 1, 1)
         self.button_blank = QtWidgets.QLabel(self.conn_table_frame)
         self.button_blank.setObjectName("button_blank")
         self.gridLayout.addWidget(self.button_blank, 0, 2, 1, 1)
-        self.del_button = QtWidgets.QPushButton(self.conn_table_frame)
-        self.del_button.setObjectName("del_button")
-        self.gridLayout.addWidget(self.del_button, 0, 3, 1, 1)
+        self.button_blank2 = QtWidgets.QLabel(self.conn_table_frame)
+        self.button_blank2.setObjectName("button_blank2")
+        self.gridLayout.addWidget(self.button_blank2, 0, 3, 1, 1)
         self.quit_button = QtWidgets.QPushButton(self.conn_table_frame)
         self.quit_button.setObjectName("quit_button")
         self.gridLayout.addWidget(self.quit_button, 0, 4, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout)
         self.verticalLayout_frame.addWidget(self.conn_table_frame)
 
-        self.quit_button.clicked.connect(self.close)
+        self.add_button.clicked.connect(self.add_conn)
         self.del_button.clicked.connect(self.batch_delete)
+        self.quit_button.clicked.connect(self.close)
         self.tableWidget.item_checkbox_clicked.connect(lambda checked, field, row:
                                                        self.on_checkbox_changed(checked, field, row))
 
@@ -116,10 +118,10 @@ class ConnTableDialog(DraggableDialog):
         self.setWindowTitle(_translate("Dialog", "连接列表"))
         self.conn_table_header.setText("连接列表")
         self.add_button.setText("添加连接")
-        self.edit_button.setText("编辑连接")
         self.del_button.setText("删除连接")
         self.quit_button.setText("退出")
         self.button_blank.setText("")
+        self.button_blank2.setText("")
 
     def make_table_header(self):
         self.tableWidget.setColumnCount(6)
@@ -220,6 +222,18 @@ class ConnTableDialog(DraggableDialog):
         self.connect_signal.emit(conn_name)
         self.close()
 
+    def add_conn(self):
+        connection = Connection(*((None,) * len(Connection._fields)))
+        self.add_dialog = ConnDialog(connection, ADD_CONN_MENU, self.main_screen_rect)
+        self.add_dialog.conn_signal.connect(self.add_table_row)
+        self.add_dialog.exec()
+
+    def add_table_row(self, connection):
+        # 向主窗口发信号
+        self.add_signal.emit(connection)
+        # 表格添加行
+        self.fill_table((connection, ), self.tableWidget.rowCount())
+
     def edit_conn(self, row, conn_name):
         connection = self.parent.conn_dict.get(conn_name)
         self.edit_dialog = ConnDialog(connection, EDIT_CONN_MENU, self.main_screen_rect)
@@ -273,7 +287,8 @@ class ConnTableDialog(DraggableDialog):
                 self.on_checkbox_changed(Qt.Unchecked, self.tableWidget.item(row, 1).text(), row)
 
     def batch_delete(self):
-        OperateConn(self, self.selected_connections, self.del_signal)
+        if self.selected_connections:
+            OperateConn(self, self.selected_connections, self.del_signal)
 
     def rebuild_pop_menu(self, rows):
         [self.tableWidget.setCellWidget(row, 5, self.make_tools(row)) for row in rows]

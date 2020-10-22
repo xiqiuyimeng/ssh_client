@@ -194,6 +194,7 @@ class MainWindow(QMainWindow):
     def open_table(self):
         self.table_dialog = ConnTableDialog(self, self.screen_rect)
         self.table_dialog.connect_signal.connect(self.connect)
+        self.table_dialog.add_signal.connect(lambda conn: add_list_item(self, conn))
         self.table_dialog.edit_signal.connect(lambda row, conn: update_list_item(self, row, conn))
         self.table_dialog.del_signal.connect(lambda selected_conns:
                                              delete_list_item(self, selected_conns, del_data=False))
