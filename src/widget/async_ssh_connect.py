@@ -29,8 +29,8 @@ class SSHConnectWorker(QThread):
 
     def consume(self):
         while True:
-            n = yield
-            self.result.emit(n)
+            result = yield
+            self.result.emit(result)
 
     def produce(self, consumer):
         consumer.__next__()

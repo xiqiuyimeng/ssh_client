@@ -198,7 +198,7 @@ class ConnTableDialog(DraggableDialog):
         if item:
             # 获取选中行号
             row = self.tableWidget.indexAt(pos).row()
-            conn_name = item.text()
+            conn_name = self.tableWidget.item(row, 1).text()
             # 生成右键菜单
             menu = QMenu()
             menu_names = [CONNECT, EDIT, DELETE]
