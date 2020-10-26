@@ -56,7 +56,7 @@ class MyTextEdit(QPlainTextEdit, MyScrollableWidget):
         """
         self.moveCursor(QTextCursor.End)
         cursor = self.textCursor()
-        pattern = re.compile(r'(\x1b\[0m)?\x1b\[(?P<fore>\d{,3};)?(?P<back>\d{,3}m)(?P<text>.+?)\x1b\[0m')
+        pattern = re.compile(r'(\x1b\[0m)?\x1b\[(?P<fore>(\d{,3};)+)?(?P<back>\d{,3}m)(?P<text>.+?)\x1b\[0m')
         result = pattern.finditer(text)
         start = 0
         for r in result:
@@ -67,8 +67,8 @@ class MyTextEdit(QPlainTextEdit, MyScrollableWidget):
             self.moveCursor(QTextCursor.End)
             # 处理文本样式
             if r.groupdict().get('fore'):
-                fore = int(r.group('fore')[: -1])
-                self.set_format(fore, fmt)
+                fores = r.group('fore')[: -1].split(";")
+                [self.set_format(int(fore), fmt) for fore in fores]
             if r.groupdict().get('back'):
                 back = int(r.group('back')[: -1])
                 self.set_format(back, fmt)

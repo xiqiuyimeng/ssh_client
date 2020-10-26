@@ -19,7 +19,7 @@ class InteractiveShell:
 
     def recv_msg(self):
         while True:
-            data = self.channel.recv(1024)
+            data = self.channel.recv(2048)
             if not data:
                 break
             self.consumer.send(data.decode())
